@@ -255,9 +255,30 @@ html, body {
 }
 .action-btn:active { background: rgba(255,255,255,.25); transform: scale(.94); }
 .action-btn.slide:active { background: rgba(31,109,255,.6); }
-/* Primary fire button — biggest, on the far right */
-.action-btn.shoot {
-  width: 92px; height: 92px; font-size: 15px;
-  border-color: #ff5252; background: rgba(255,59,59,.22);
+
+/* Fire / aim joystick — drag to aim the crosshair, hold to fire */
+.fire-joystick {
+  position: fixed;
+  right: 26px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
+  width: 120px; height: 120px;
+  z-index: 21;
 }
-.action-btn.shoot:active { background: rgba(255,59,59,.7); transform: scale(.92); }
+.fire-base {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 110px; height: 110px; border-radius: 50%;
+  background: rgba(255,59,59,.10);
+  border: 2px solid rgba(255,82,82,.55);
+}
+.fire-knob {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px; height: 70px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; letter-spacing: 1px; color: #fff;
+  background: rgba(255,59,59,.4);
+  border: 2px solid #ff5252;
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+.fire-joystick.active .fire-knob { background: rgba(255,59,59,.8); }

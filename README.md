@@ -43,7 +43,7 @@ on-screen joystick to move.
 |------------------|---------------------------------------------------|
 | Left joystick    | Move (push near max edge to auto-sprint)          |
 | Drag screen      | Look / aim (drag up = look up)                     |
-| FIRE             | Shoot (hold to auto-fire)                          |
+| FIRE joystick    | Hold to fire / slash; **drag it to aim** the crosshair |
 | JUMP             | Jump; tap during a slide for a slide-jump          |
 | SLIDE            | Slide with momentum                                |
 | GLOO WALL        | Deploy a temporary cover wall                       |
