@@ -50,10 +50,65 @@ html, body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- Rotate / fullscreen overlay (portrait only) ---------- */
+#rotate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: #05070d;
+  text-align: center;
+  padding: 24px;
+}
+#rotate-overlay p { font-size: 16px; letter-spacing: 1px; opacity: .85; }
+.rotate-icon { font-size: 56px; animation: rock 1.6s ease-in-out infinite; }
+@keyframes rock { 0%,100% { transform: rotate(-12deg);} 50% { transform: rotate(78deg);} }
+#fs-btn {
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 2px solid #ff3b3b;
+  background: rgba(255,59,59,.15);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+/* In portrait, show the overlay and hide gameplay UI */
+@media (orientation: portrait) {
+  body.playing #rotate-overlay { display: flex; }
+}
+
+/* ---------- Crosshair ---------- */
+#crosshair {
+  position: fixed;
+  left: 50%; top: 48%;
+  transform: translate(-50%, -50%);
+  width: 34px; height: 34px;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+#crosshair.show { opacity: .9; }
+.ch-dot {
+  position: absolute; left: 50%; top: 50%;
+  width: 3px; height: 3px; border-radius: 50%;
+  background: #ff3b3b; transform: translate(-50%, -50%);
+}
+.ch-line { position: absolute; background: rgba(255,255,255,.85); }
+.ch-line.top, .ch-line.bottom { width: 2px; height: 9px; left: 50%; transform: translateX(-50%); }
+.ch-line.top { top: 0; } .ch-line.bottom { bottom: 0; }
+.ch-line.left, .ch-line.right { height: 2px; width: 9px; top: 50%; transform: translateY(-50%); }
+.ch-line.left { left: 0; } .ch-line.right { right: 0; }
+
 /* ---------- Top HUD ---------- */
 #hud-top {
   position: fixed;
-  top: env(safe-area-inset-top, 12px);
+  top: env(safe-area-inset-top, 8px);
   left: 0; right: 0;
   z-index: 10;
   display: flex;
@@ -61,92 +116,143 @@ html, body {
   align-items: center;
   gap: 4px;
   pointer-events: none;
-  padding-top: 8px;
+  padding-top: 6px;
 }
 .team-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: flex; align-items: center; gap: 6px;
   background: rgba(0,0,0,.45);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 700;
+  padding: 4px 10px; border-radius: 6px; font-weight: 700;
 }
 .score { width: 22px; text-align: center; border-radius: 4px; padding: 2px 0; }
 .score.blue { background: #1f6dff; }
 .score.orange { background: #ff7a18; }
 .timer { font-variant-numeric: tabular-nums; min-width: 52px; text-align: center; }
 .objective {
-  font-size: 11px;
-  letter-spacing: 1px;
-  background: rgba(0,0,0,.4);
-  padding: 2px 10px;
-  border-radius: 4px;
-  opacity: .85;
+  font-size: 11px; letter-spacing: 1px;
+  background: rgba(0,0,0,.4); padding: 2px 10px; border-radius: 4px; opacity: .85;
 }
 
-/* ---------- Joysticks ---------- */
+/* ---------- Movement joystick ---------- */
 .joystick-zone {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
-  width: 150px;
-  height: 150px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  left: 22px;
+  width: 150px; height: 150px;
   z-index: 20;
 }
-#move-zone { left: 22px; }
-#look-zone { right: 22px; }
-
 .joystick-base {
-  position: absolute;
-  left: 50%; top: 50%;
+  position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: 120px; height: 120px;
-  border-radius: 50%;
+  width: 120px; height: 120px; border-radius: 50%;
   background: rgba(255,255,255,.06);
   border: 2px solid rgba(255,255,255,.22);
   backdrop-filter: blur(2px);
 }
 .joystick-knob {
-  position: absolute;
-  left: 50%; top: 50%;
+  position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: 52px; height: 52px;
-  border-radius: 50%;
+  width: 52px; height: 52px; border-radius: 50%;
   background: rgba(255,255,255,.85);
   box-shadow: 0 2px 10px rgba(0,0,0,.5);
-  transition: background .1s;
 }
 .joystick-zone.active .joystick-knob { background: #ff3b3b; }
 .joystick-label {
-  position: absolute;
-  left: 50%; bottom: -14px;
+  position: absolute; left: 50%; bottom: -14px;
   transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 2px;
-  opacity: .5;
+  font-size: 10px; letter-spacing: 2px; opacity: .5;
+}
+.look-hint {
+  position: fixed; right: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; opacity: .25; letter-spacing: 1px;
+  pointer-events: none; z-index: 5;
+  writing-mode: vertical-rl;
 }
 
-/* ---------- Action buttons ---------- */
+/* ---------- Weapon slots ---------- */
+#weapon-slots {
+  position: fixed;
+  right: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + 56px);
+  z-index: 20;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+}
+.wslot {
+  position: relative;
+  width: 118px; height: 40px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.25);
+  background: rgba(0,0,0,.4);
+  color: #fff; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; padding-left: 12px;
+  letter-spacing: .5px;
+  transition: transform .12s, border-color .12s, background .12s;
+}
+.wslot .wkey {
+  position: absolute; right: 6px; top: 4px;
+  font-size: 9px; opacity: .4;
+  border: 1px solid rgba(255,255,255,.3); border-radius: 3px;
+  padding: 0 4px;
+}
+.wslot.empty { opacity: .45; }
+.wslot.active {
+  border-color: #ff3b3b;
+  background: rgba(255,59,59,.22);
+  transform: scale(1.05);
+}
+.melee-indicator {
+  font-size: 11px; padding: 5px 10px;
+  border-radius: 8px; background: rgba(0,0,0,.4);
+  border: 2px solid rgba(255,255,255,.18);
+  letter-spacing: .5px;
+}
+.melee-indicator.active { border-color: #1f6dff; background: rgba(31,109,255,.25); }
+
+/* ---------- Pickup prompt ---------- */
+#pickup-prompt {
+  position: fixed;
+  left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 120px);
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 30px;
+  background: rgba(0,0,0,.6); border: 2px solid #ffd23a;
+  color: #fff; font-size: 14px;
+  animation: pulse 1.1s ease-in-out infinite;
+}
+#pickup-prompt.hidden { display: none; }
+.pk-icon { font-size: 18px; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,210,58,.5);} 50% { box-shadow: 0 0 0 8px rgba(255,210,58,0);} }
+
+/* ---------- Ability + action buttons ---------- */
+.ability-btn {
+  position: fixed;
+  left: 22px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 190px);
+  z-index: 20;
+  width: 66px; height: 66px; border-radius: 50%;
+  border: 2px solid #9b6bff; background: rgba(120,70,255,.18);
+  color: #fff; font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ability-btn .ab-name { font-size: 11px; letter-spacing: 1px; }
+.ability-btn .ab-sub { font-size: 9px; opacity: .7; }
+.ability-btn:active { transform: scale(.94); }
+.ability-btn.cooldown { opacity: .4; border-color: #555; background: rgba(80,80,80,.2); }
+
 #actions {
   position: fixed;
   right: 22px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 190px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
   z-index: 20;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: flex-end;
+  display: flex; align-items: flex-end; gap: 14px;
 }
 .action-btn {
-  width: 72px; height: 72px;
-  border-radius: 50%;
+  width: 76px; height: 76px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,.25);
   background: rgba(0,0,0,.35);
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 1px;
+  color: #fff; font-weight: 700; font-size: 12px; letter-spacing: 1px;
 }
 .action-btn:active { background: rgba(255,59,59,.6); transform: scale(.94); }
-.action-btn.sprint { width: 60px; height: 60px; font-size: 11px; }
-.action-btn.sprint.on { background: rgba(31,109,255,.6); border-color: #1f6dff; }
+.action-btn.slide { width: 66px; height: 66px; font-size: 11px; }
+.action-btn.slide:active { background: rgba(31,109,255,.6); }
