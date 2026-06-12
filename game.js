@@ -75,8 +75,8 @@ function addContainer(x, y, z, ry, color, climbable = true) {
   const box = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), [endMat, endMat, sideMat, sideMat, sideMat, sideMat]);
   box.position.set(x, y + H / 2, z); box.rotation.y = ry; box.castShadow = true; box.receiveShadow = true; scene.add(box);
   const hx = Math.abs(Math.cos(ry)) * W / 2 + Math.abs(Math.sin(ry)) * D / 2, hz = Math.abs(Math.sin(ry)) * W / 2 + Math.abs(Math.cos(ry)) * D / 2;
-  const col = { x, z, hx, hz, top: y + H }; colliders.push(col);
-  if (climbable && y === 0) addClimbMarker(x, y + H, z, hz);
+  const col = { x, z, hx, hz, top: y + H, climb: !!(climbable && y === 0 && H <= 2.7) }; colliders.push(col);
+  if (col.climb) addClimbMarker(x, y + H, z, hz);
   return col;
 }
 function addLadder(x, z, top, nx, nz) {
@@ -91,33 +91,22 @@ function addRamp(x, z, dir, steps, color) { for (let i = 0; i < steps; i++) { co
 
 function buildMap() {
   let ci = 0; const pick = () => CONTAINER_COLORS[(ci++) % CONTAINER_COLORS.length];
-  for (const z of [-22, -14, 14, 22]) for (let x = -24; x <= 24; x += 9) { if (Math.random() < 0.15) continue; addContainer(x, 0, z, 0, pick(), true); if (Math.random() < 0.45) addContainer(x, 2.6, z, 0, pick(), false); }
-  addContainer(-8, 0, -4, Math.PI / 2, pick()); addContainer(8, 0, 4, Math.PI / 2, pick());
-  addContainer(-6, 0, 7, 0, pick()); addContainer(7, 0, -7, 0, pick()); addContainer(0, 0, -9, Math.PI / 2, pick());
-  addContainer(-18, 0, 0, Math.PI / 2, pick()); addContainer(-18, 2.6, 0, Math.PI / 2, pick(), false);
-  addContainer(18, 0, 0, Math.PI / 2, pick()); addContainer(18, 2.6, 0, Math.PI / 2, pick(), false);
+  // rows: single containers are climbable; stacked (double) ones are not
+  for (const z of [-22, -14, 14, 22]) for (let x = -24; x <= 24; x += 9) {
+    if (Math.random() < 0.15) continue;
+    const stacked = Math.random() < 0.45;
+    addContainer(x, 0, z, 0, pick(), !stacked);
+    if (stacked) addContainer(x, 2.6, z, 0, pick(), false);
+  }
+  // single containers around the centre (climbable)
+  addContainer(-8, 0, -4, Math.PI / 2, pick(), true); addContainer(8, 0, 4, Math.PI / 2, pick(), true);
+  addContainer(-6, 0, 7, 0, pick(), true); addContainer(7, 0, -7, 0, pick(), true); addContainer(0, 0, -9, Math.PI / 2, pick(), true);
+  // two double-stacks (NOT climbable)
+  addContainer(-18, 0, 0, Math.PI / 2, pick(), false); addContainer(-18, 2.6, 0, Math.PI / 2, pick(), false);
+  addContainer(18, 0, 0, Math.PI / 2, pick(), false); addContainer(18, 2.6, 0, Math.PI / 2, pick(), false);
+  // perimeter walls made of containers
   for (let x = -27; x <= 27; x += 6) { addContainer(x, 0, -30, 0, 0x6a6f76, false); addContainer(x, 0, 30, 0, 0x6a6f76, false); }
   for (let z = -27; z <= 27; z += 2.5) { addContainer(-30, 0, z, Math.PI / 2, 0x6a6f76, false); addContainer(30, 0, z, Math.PI / 2, 0x6a6f76, false); }
-
-  // climbing aids — small steps (mantle-friendly) + a ramp
-  const bm = matMatte(0x7a5a36);
-  addBlock(-13.6, 0, 14, 2, 1.0, 1.0, 0, bm, true); addBlock(-13.6, 0, 12.6, 2, 1.7, 1.0, 0, bm, true);
-  addBlock(13.6, 0, -14, 2, 1.0, 1.0, 0, bm, true);
-  addRamp(10, 14, -1, 4, 0x8a5a2b);                 // wooden stepped ramp up to the z=14 row
-  addLadder(-18, 1.6, 5.2, 0, 1); addLadder(18, 1.6, 5.2, 0, -1);
-  addZipline(-18, 5.4, 1.4, 18, 5.4, -1.4);
-
-  // wooden plank bridges between container tops (walkable)
-  addBlock(-1.5, 2.6, 14, 9, 0.14, 0.9, 0, woodMat, false);
-  addBlock(-1.5, 2.6, -14, 9, 0.14, 0.9, 0, woodMat, false);
-  addBlock(0, 2.6, 18, 0.9, 0.14, 8, 0, woodMat, false);   // plank linking the two near rows
-
-  // perimeter dressing
-  const stone = matMatte(0xe8e3d6);
-  addBlock(-2.6, 0, 29.4, 0.8, 4, 0.8, 0, stone); addBlock(2.6, 0, 29.4, 0.8, 4, 0.8, 0, stone); addBlock(0, 3.6, 29.4, 6.6, 0.8, 0.9, 0, stone);
-  for (const cx of [-3.2, 3.2]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 3.4, 14), stone); c.position.set(cx, 1.7, 11); c.castShadow = true; scene.add(c); colliders.push({ x: cx, z: 11, hx: 0.45, hz: 0.45, top: 3.4 }); }
-  addBlock(-26, 0, 10, 0.6, 3.2, 5, 0, matMatte(0x3b6ea5)); addBlock(-26, 0, -10, 0.6, 3.2, 5, 0, matMatte(0xb5472f));
-  const fm = matMatte(0x55524c); for (let x = -8; x <= 8; x += 2) addBlock(x, 0.25, -2, 0.16, 1, 0.16, 0, fm);
 }
 buildMap();
 
@@ -126,7 +115,10 @@ buildMap();
 // ============================================================
 function buildHair(color) {
   const g = new THREE.Group(); const m = matMatte(color);
-  const sp = [[0, 0.18, 0, 0.16, 0.34, 0], [-0.13, 0.13, 0.02, 0.12, 0.3, -0.4], [0.13, 0.13, 0.02, 0.12, 0.3, 0.4], [0, 0.14, -0.14, 0.12, 0.3, 2.4], [-0.16, 0.05, 0.05, 0.1, 0.26, -0.9], [0.16, 0.05, 0.05, 0.1, 0.26, 0.9], [-0.08, 0.16, 0.12, 0.1, 0.28, -0.3], [0.08, 0.16, 0.12, 0.1, 0.28, 0.3], [0, 0.18, 0.14, 0.1, 0.26, 0]];
+  // scalp cap so the sides/back aren't bald
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.66), m);
+  cap.position.y = 0.02; cap.castShadow = true; g.add(cap);
+  const sp = [[0, 0.18, 0, 0.16, 0.34, 0], [-0.13, 0.13, 0.02, 0.12, 0.3, -0.4], [0.13, 0.13, 0.02, 0.12, 0.3, 0.4], [0, 0.14, -0.14, 0.12, 0.3, 2.4], [-0.16, 0.05, 0.05, 0.1, 0.26, -0.9], [0.16, 0.05, 0.05, 0.1, 0.26, 0.9], [-0.08, 0.16, 0.12, 0.1, 0.28, -0.3], [0.08, 0.16, 0.12, 0.1, 0.28, 0.3], [0, 0.18, 0.14, 0.1, 0.26, 0], [-0.18, -0.04, -0.04, 0.09, 0.22, -1.3], [0.18, -0.04, -0.04, 0.09, 0.22, 1.3]];
   for (const [x, y, z, r, h, rz] of sp) { const c = new THREE.Mesh(new THREE.ConeGeometry(r, h, 6), m); c.position.set(x, y, z); c.rotation.z = rz; c.rotation.x = z < 0 ? -0.5 : 0.2; c.castShadow = true; g.add(c); }
   const b = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.24, 6), m); b.position.set(0, 0.05, 0.19); b.rotation.x = 0.9; g.add(b); return g;
 }
@@ -147,7 +139,10 @@ function buildAvatar(opt = {}) {
   torso.add(part(new THREE.CylinderGeometry(0.085, 0.1, 0.16, 8), matMatte(skin), 0, 0.66, 0));
 
   // back holster anchor
-  const backAnchor = new THREE.Group(); backAnchor.position.set(0, 0.3, -0.2); torso.add(backAnchor);
+  const backAnchor = new THREE.Group(); backAnchor.position.set(0, 0.3, -0.3); torso.add(backAnchor);
+  // hero cape (hangs behind, sways with motion) — sits behind the holstered weapons
+  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 1.12, 1, 4), new THREE.MeshStandardMaterial({ color: opt.cape ?? 0xc0392b, side: THREE.DoubleSide, roughness: 0.92 }));
+  cape.position.set(0, 0.1, -0.24); cape.rotation.x = 0.12; cape.castShadow = true; torso.add(cape);
 
   function buildArm(side) {
     const a = new THREE.Group();                                  // shoulder
@@ -172,7 +167,7 @@ function buildAvatar(opt = {}) {
   const legL = buildLeg(-1), legR = buildLeg(1); body.add(legL, legR);
 
   const handAnchor = new THREE.Group(); handAnchor.position.set(0.16, 1.26, 0.38); body.add(handAnchor);
-  return { group, parts: { body, torso, head, armL, armR, legL, legR, handAnchor, backAnchor }, phase: 0 };
+  return { group, parts: { body, torso, head, armL, armR, legL, legR, handAnchor, backAnchor, cape }, phase: 0 };
 }
 
 const setLeg = (hip, hr, kr, dt, r = 12) => { hip.rotation.x = lerpN(hip.rotation.x, hr, dt, r); hip.userData.knee.rotation.x = lerpN(hip.userData.knee.rotation.x, kr, dt, r); };
@@ -195,6 +190,7 @@ function poseAvatar(a, state, dt, armsFree = true) {
   else { a.phase += dt * 2; setLeg(P.legL, 0, 0, dt, 8); setLeg(P.legR, 0, 0, dt, 8); if (armsFree) { setArm(P.armL, 0, 0, 0.35, dt, 8); setArm(P.armR, 0, 0, 0.35, dt, 8); } bodyX = Math.sin(a.phase) * 0.02; }
   P.body.position.y = lerpN(P.body.position.y, bodyY, dt, 12); P.body.rotation.x = lerpN(P.body.rotation.x, bodyX, dt, 10); P.torso.rotation.x = lerpN(P.torso.rotation.x, torsoX, dt, 8);
   if (state !== 'slide') lerpRot(P.head, 'x', 0, dt, 8);
+  if (P.cape) { const lift = state === 'sprint' ? -0.55 : (state === 'walk' || state === 'climb') ? -0.32 : 0.12; P.cape.rotation.x = lerpN(P.cape.rotation.x, lift + Math.sin(a.phase * 4) * 0.05, dt, 6); }
 }
 
 // ============================================================
@@ -344,11 +340,15 @@ let firing = false, climbing = false, riding = null, crouching = false, landTime
 const WALK = 4.6, SPRINT = 8.8, MANTLE_MAX = 2.7;
 
 function tryMantle() {
-  const fx = Math.sin(player.rotation.y), fz = Math.cos(player.rotation.y);
-  const ax = player.position.x + fx * 0.7, az = player.position.z + fz * 0.7; let target = null;
-  for (const c of colliders) if (ax > c.x - c.hx && ax < c.x + c.hx && az > c.z - c.hz && az < c.z + c.hz && c.top > player.position.y + 0.4 && c.top <= player.position.y + MANTLE_MAX) { if (!target || c.top > target.top) target = c; }
+  const fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);   // climb toward where you look
+  const ax = player.position.x + fx * 0.8, az = player.position.z + fz * 0.8; let target = null;
+  for (const c of colliders) if (c.climb && ax > c.x - c.hx && ax < c.x + c.hx && az > c.z - c.hz && az < c.z + c.hz && c.top > player.position.y + 0.4 && c.top <= player.position.y + MANTLE_MAX) { if (!target || c.top > target.top) target = c; }
   if (!target) return false;
-  mantling = { t: 0, dur: 0.45, from: player.position.clone(), to: new THREE.Vector3(player.position.x + fx * 1.2, target.top, player.position.z + fz * 1.2) }; return true;
+  const from = player.position.clone();
+  // phase 1: reach + rise to the ledge, phase 2: pull forward onto the top
+  mantling = { t: 0, dur: 0.62, p0: from, p1: new THREE.Vector3(from.x, target.top + 0.15, from.z), p2: new THREE.Vector3(from.x + fx * 1.25, target.top, from.z + fz * 1.25) };
+  player.rotation.y = Math.atan2(fx, fz);   // face the wall
+  return true;
 }
 function jump() {
   if (riding) { riding = null; verticalVel = 2; return; } if (mantling) return;
@@ -392,21 +392,17 @@ function shieldTexture() {
   const s = 22; for (let y = -s; y < 140; y += s * 0.75) for (let x = -s; x < 140; x += s) { const ox = (Math.round(y / (s * 0.75)) % 2) * (s / 2); ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; const px = x + ox + Math.cos(a) * s * 0.5, py = y + Math.sin(a) * s * 0.5; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.closePath(); ctx.stroke(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-const shieldTex = shieldTexture();
-function buildShield(W, H) {
+// White, opaque, curved battlement wall — concave side faces the player who dropped it.
+function buildGloo(W, H) {
   const g = new THREE.Group();
-  const R = 2.6, theta = W / R;                                  // curved panel
-  const mat = new THREE.MeshStandardMaterial({ map: shieldTex, color: 0x8fe6ff, transparent: true, opacity: 0.5, emissive: 0x35b6e6, emissiveIntensity: 0.8, side: THREE.DoubleSide, roughness: 0.2, metalness: 0, depthWrite: false });
-  const panel = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 28, 1, true, -theta / 2, theta), mat);
-  g.add(panel);
-  // rounded top edge (torus arc)
-  const top = new THREE.Mesh(new THREE.TorusGeometry(R, 0.09, 8, 28, theta), new THREE.MeshBasicMaterial({ color: 0x9becff, transparent: true, opacity: 0.85 }));
-  top.rotation.x = Math.PI / 2; top.position.y = H / 2; top.rotation.z = -theta / 2 + Math.PI / 2; g.add(top);
-  const bot = top.clone(); bot.position.y = -H / 2; g.add(bot);
-  // inner soft core glow
-  const core = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.06, R - 0.06, H * 0.94, 24, 1, true, -theta / 2 * 0.96, theta * 0.96), new THREE.MeshBasicMaterial({ color: 0x4fd0ff, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
-  g.add(core);
-  g.userData.mat = mat; g.userData.R = R;
+  const mat = new THREE.MeshStandardMaterial({ color: 0xf3f6fb, roughness: 0.55, metalness: 0.04, emissive: 0x7fc4e6, emissiveIntensity: 0.12 });
+  const N = 7, curve = 0.55, pw = W / N + 0.06;
+  for (let i = 0; i < N; i++) {
+    const fx = i / (N - 1) - 0.5, x = fx * W, z = -curve * (1 - (2 * fx) * (2 * fx));   // parabola bulges away (+z faces player)
+    const p = new THREE.Mesh(new THREE.BoxGeometry(pw, H, 0.3), mat); p.position.set(x, 0, z); p.rotation.y = fx * 0.55; p.castShadow = true; p.receiveShadow = true; g.add(p);
+    if (i % 2 === 0) { const m = new THREE.Mesh(new THREE.BoxGeometry(pw * 0.78, 0.5, 0.32), mat); m.position.set(x, H / 2 + 0.25, z); m.rotation.y = fx * 0.55; m.castShadow = true; g.add(m); }   // merlon teeth -> M battlement
+  }
+  g.userData.mat = mat;
   return g;
 }
 const glooWalls = []; const GLOO_MAX = 3, GLOO_RECHARGE = 7; let glooCharges = GLOO_MAX, glooRechargeT = 0;
@@ -417,13 +413,11 @@ function deployGloo() {
   if (glooCharges <= 0 || mantling || riding) return; glooCharges--;
   const f = cam.yaw, fx = -Math.sin(f), fz = -Math.cos(f);
   const wx = player.position.x + fx * 2.6, wz = player.position.z + fz * 2.6;
-  const W = 4.0, H = 2.7; const g = buildShield(W, H);
-  // curve faces the player: place arc centre behind the wall
-  g.position.set(wx + Math.sin(f) * 0 + fx * g.userData.R, 0.05, wz + fz * g.userData.R);
-  g.rotation.y = f; g.scale.set(0.2, 0.04, 0.2); scene.add(g);
-  // collider: flat-ish box covering the chord, offset back to the panel face
-  const cw = 2 * g.userData.R * Math.sin((W / g.userData.R) / 2);
-  const hx = Math.abs(Math.cos(f)) * cw / 2 + Math.abs(Math.sin(f)) * 0.4, hz = Math.abs(Math.sin(f)) * cw / 2 + Math.abs(Math.cos(f)) * 0.4;
+  const W = 4.8, H = 2.7, D = 1.3; const g = buildGloo(W, H);
+  g.position.set(wx, 0.05, wz);
+  g.rotation.y = Math.atan2(-fx, -fz);     // local +z (concave side) faces the player
+  g.scale.set(1, 0.04, 1); scene.add(g);
+  const hx = Math.abs(Math.cos(f)) * W / 2 + Math.abs(Math.sin(f)) * D / 2, hz = Math.abs(Math.sin(f)) * W / 2 + Math.abs(Math.cos(f)) * D / 2;
   const col = { x: wx, z: wz, hx, hz, top: H, gloo: true }; colliders.push(col);
   glooWalls.push({ mesh: g, col, life: 14, t: 0, H }); updateGlooUI();
 }
@@ -468,17 +462,17 @@ function startSlash() { if (slashT < 1) return; slashT = 0; const fx = Math.sin(
 // ray vs world
 const _ro = new THREE.Vector3(), _rd = new THREE.Vector3();
 function rayHit(origin, dir, maxDist = 200) {
-  let best = maxDist, point = null; const normal = new THREE.Vector3(0, 1, 0); let bot = null;
+  let best = maxDist, point = null; const normal = new THREE.Vector3(0, 1, 0); let bot = null, hcol = null;
   if (dir.y < -1e-4) { const t = -origin.y / dir.y; if (t > 0 && t < best) { best = t; point = origin.clone().addScaledVector(dir, t); normal.set(0, 1, 0); } }
   for (const c of colliders) {
     const minX = c.x - c.hx, maxX = c.x + c.hx, minZ = c.z - c.hz, maxZ = c.z + c.hz, minY = 0, maxY = c.top; let tmin = 0, tmax = best, nx = 0, ny = 0, nz = 0;
     if (Math.abs(dir.x) < 1e-6) { if (origin.x < minX || origin.x > maxX) continue; } else { let t1 = (minX - origin.x) / dir.x, t2 = (maxX - origin.x) / dir.x, s = -1; if (t1 > t2) { const tt = t1; t1 = t2; t2 = tt; s = 1; } if (t1 > tmin) { tmin = t1; nx = s; ny = nz = 0; } if (t2 < tmax) tmax = t2; if (tmin > tmax) continue; }
     if (Math.abs(dir.y) < 1e-6) { if (origin.y < minY || origin.y > maxY) continue; } else { let t1 = (minY - origin.y) / dir.y, t2 = (maxY - origin.y) / dir.y, s = -1; if (t1 > t2) { const tt = t1; t1 = t2; t2 = tt; s = 1; } if (t1 > tmin) { tmin = t1; nx = 0; ny = s; nz = 0; } if (t2 < tmax) tmax = t2; if (tmin > tmax) continue; }
     if (Math.abs(dir.z) < 1e-6) { if (origin.z < minZ || origin.z > maxZ) continue; } else { let t1 = (minZ - origin.z) / dir.z, t2 = (maxZ - origin.z) / dir.z, s = -1; if (t1 > t2) { const tt = t1; t1 = t2; t2 = tt; s = 1; } if (t1 > tmin) { tmin = t1; nx = 0; ny = 0; nz = s; } if (t2 < tmax) tmax = t2; if (tmin > tmax) continue; }
-    if (tmin > 0 && tmin < best) { best = tmin; point = origin.clone().addScaledVector(dir, tmin); normal.set(nx, ny, nz); bot = null; }
+    if (tmin > 0 && tmin < best) { best = tmin; point = origin.clone().addScaledVector(dir, tmin); normal.set(nx, ny, nz); bot = null; hcol = c; }
   }
-  for (const b of bots) { if (b.dead) continue; _ro.copy(origin).sub(b.pos); _ro.y -= 1.1; const r = 0.7; _rd.copy(dir); const proj = -_ro.dot(_rd); if (proj < 0) continue; const d2 = _ro.lengthSq() - proj * proj; if (d2 > r * r) continue; const t = proj - Math.sqrt(r * r - d2); if (t > 0 && t < best) { best = t; point = origin.clone().addScaledVector(dir, t); normal.copy(dir).multiplyScalar(-1); bot = b; } }
-  return { dist: best, point: point || origin.clone().addScaledVector(dir, maxDist), normal, bot };
+  for (const b of bots) { if (b.dead) continue; _ro.copy(origin).sub(b.pos); _ro.y -= 1.1; const r = 0.7; _rd.copy(dir); const proj = -_ro.dot(_rd); if (proj < 0) continue; const d2 = _ro.lengthSq() - proj * proj; if (d2 > r * r) continue; const t = proj - Math.sqrt(r * r - d2); if (t > 0 && t < best) { best = t; point = origin.clone().addScaledVector(dir, t); normal.copy(dir).multiplyScalar(-1); bot = b; hcol = null; } }
+  return { dist: best, point: point || origin.clone().addScaledVector(dir, maxDist), normal, bot, col: hcol };
 }
 
 // fire
@@ -494,6 +488,7 @@ function tryFire(dt) {
   const hit = rayHit(_muzzle, dir); spawnTracer(_muzzle, hit.point);
   if (hit.bot) { hit.bot.hp -= weaponDamage(w, hit.dist); hit.bot.hitFlash = 0.6; hit.bot.av.parts.torso.children[0].material.emissive?.setScalar(0.6); if (hit.bot.hp <= 0) killBot(hit.bot); }
   spawnImpact(hit.point, hit.normal);
+  if (hit.col && hit.col.gloo) spawnImpact(hit.point, hit.normal);   // ricochet — bullets bounce off the Gloo, no penetration
   muzzleFlash.position.copy(_muzzle); muzzleFlash.visible = true; flashTime = 0.045; muzzleFlash.scale.set(0.8 + Math.random() * 0.4, 0.8 + Math.random() * 0.4, 1.6 + Math.random());
   ejectShell(_muzzle.clone().addScaledVector(_right, 0.1).addScaledVector(_look, -0.15), _right);
   recoilPitch += w.recoil; recoilYaw += (Math.random() - 0.5) * w.recoil * 0.6; handAnchor.position.z -= 0.06;
@@ -512,10 +507,10 @@ function poseHold(dt) {
   const aL = avatar.parts.armL, aR = avatar.parts.armR, w = WEAPONS[heldKey];
   if (switchT < 1) { setArm(aR, -0.8, -0.1, 0.7, dt, 8); setArm(aL, -0.7, 0.3, 0.8, dt, 8); return; }
   if (w.type === 'melee') {
-    if (slashT < 1) { const e = slashT, sw = -1.5 + e * 2.4; setArm(aR, sw, -0.2, 0.5 + e * 0.5, dt, 18); setArm(aL, sw - 0.1, 0.45, 0.7 + e * 0.4, dt, 18); }
-    else { setArm(aR, -1.0, -0.18, 0.85, dt, 8); setArm(aL, -1.1, 0.5, 1.05, dt, 8); }
-    handAnchor.position.set(0.04, 1.08, 0.36); handAnchorBaseZ = 0.36;
-    if (slashT >= 1) { handAnchor.rotation.x = lerpN(handAnchor.rotation.x, -0.2, dt, 8); handAnchor.rotation.z = lerpN(handAnchor.rotation.z, 0.2, dt, 8); }
+    if (slashT < 1) { const e = slashT, sw = -1.7 + e * 2.7; setArm(aR, sw, -0.25, 0.6 + e * 0.4, dt, 18); setArm(aL, sw - 0.15, 0.5, 0.85 + e * 0.3, dt, 18); }
+    else { setArm(aR, -0.65, -0.12, 1.15, dt, 8); setArm(aL, -0.5, 0.5, 1.25, dt, 8); }   // relaxed ready stance, elbows bent (not stiff)
+    handAnchor.position.set(0.14, 1.0, 0.34); handAnchorBaseZ = 0.34;
+    if (slashT >= 1) { handAnchor.rotation.x = lerpN(handAnchor.rotation.x, -0.4, dt, 8); handAnchor.rotation.z = lerpN(handAnchor.rotation.z, 0.3, dt, 8); }
   } else { // gun, two-handed
     setArm(aR, -1.2, -0.2, 0.95, dt, 9); setArm(aL, -1.35, 0.52, 1.15, dt, 9);
     handAnchor.position.set(0.12, 1.28, 0.42); handAnchorBaseZ = 0.42;
@@ -532,8 +527,10 @@ function update(dt) {
   let moveState = 'idle';
 
   if (mantling) {
-    mantling.t += dt / mantling.dur; const k = Math.min(1, mantling.t), e = 1 - (1 - k) * (1 - k);
-    player.position.lerpVectors(mantling.from, mantling.to, e); poseAvatar(avatar, 'climb', dt, false);
+    mantling.t += dt / mantling.dur; const k = Math.min(1, mantling.t);
+    if (k < 0.5) { const e = (k / 0.5) * (k / 0.5); player.position.lerpVectors(mantling.p0, mantling.p1, e); }
+    else { const u = (k - 0.5) / 0.5, e = 1 - (1 - u) * (1 - u); player.position.lerpVectors(mantling.p1, mantling.p2, e); }
+    poseAvatar(avatar, 'climb', dt, false);
     if (k >= 1) { mantling = null; verticalVel = 0; onGround = true; }
   } else if (riding) {
     riding.t += dt / (riding.len / 9); const k = Math.min(1, riding.t); player.position.lerpVectors(riding.a, riding.b, k); poseAvatar(avatar, 'jump', dt, false); if (k >= 1) { riding = null; verticalVel = 0; }
@@ -553,8 +550,13 @@ function update(dt) {
     climbing = false;
     for (const L of ladders) if (Math.hypot(player.position.x - L.x, player.position.z - L.z) < 1.0 && player.position.y < L.top - 0.05) { if (moveStick.mag > 0.25 || verticalVel > 0) { climbing = true; player.position.x = lerpN(player.position.x, L.x, dt, 8); player.position.z = lerpN(player.position.z, L.z, dt, 8); player.position.y += 3.4 * dt; verticalVel = 0; if (player.position.y >= L.top) { player.position.y = L.top; player.position.x -= L.nx * 0.6; player.position.z -= L.nz * 0.6; } } break; }
 
-    if (firing && WEAPONS[heldKey].type === 'gun') { let diff = cam.yaw - player.rotation.y; while (diff > Math.PI) diff -= 6.283; while (diff < -Math.PI) diff += 6.283; player.rotation.y += diff * Math.min(1, dt * 16); }
-    else if (inDir) { const tr = Math.atan2(inDir.x, inDir.z); let diff = tr - player.rotation.y; while (diff > Math.PI) diff -= 6.283; while (diff < -Math.PI) diff += 6.283; player.rotation.y += diff * Math.min(1, dt * 10); }
+    // face the way you look/aim (back to camera) — consistent for idle, fire, jump & gloo
+    const aimRot = Math.atan2(-Math.sin(cam.yaw), -Math.cos(cam.yaw));
+    let faceTarget = null;
+    if (WEAPONS[heldKey].type === 'gun') faceTarget = aimRot;       // guns always face the crosshair
+    else if (firing) faceTarget = aimRot;                          // katana slash faces forward
+    else if (inDir) faceTarget = Math.atan2(inDir.x, inDir.z);     // melee/idle face movement
+    if (faceTarget != null) { let diff = faceTarget - player.rotation.y; while (diff > Math.PI) diff -= 6.283; while (diff < -Math.PI) diff += 6.283; player.rotation.y += diff * Math.min(1, dt * 14); }
 
     if (!climbing) { const wasAir = !onGround; verticalVel -= 20 * dt; player.position.y += verticalVel * dt; const floor = groundHeightAt(player.position.x, player.position.z); if (player.position.y <= floor) { if (wasAir && verticalVel < -6) landTimer = 0.22; player.position.y = floor; verticalVel = 0; onGround = true; } else onGround = false; }
     resolveCollisions(player.position); player.position.x = Math.max(-29, Math.min(29, player.position.x)); player.position.z = Math.max(-29, Math.min(29, player.position.z));
@@ -582,7 +584,7 @@ function update(dt) {
     const g = glooWalls[i]; g.t += dt;
     if (g.t < 0.4) { const s = 1 - (1 - g.t / 0.4) * (1 - g.t / 0.4); g.mesh.scale.set(1, s, 1); g.mesh.position.y = g.H / 2 * s + 0.02; }
     else g.mesh.position.y = g.H / 2;
-    if (g.mesh.userData.mat) g.mesh.userData.mat.emissiveIntensity = 0.6 + Math.sin(now() / 120 + i) * 0.25;   // energy flicker
+    if (g.mesh.userData.mat) g.mesh.userData.mat.emissiveIntensity = 0.12 + Math.sin(now() / 200 + i) * 0.06;   // subtle energy shimmer
     if (g.t >= g.life) { scene.remove(g.mesh); const ci = colliders.indexOf(g.col); if (ci >= 0) colliders.splice(ci, 1); glooWalls.splice(i, 1); }
   }
 
@@ -628,7 +630,7 @@ window.addEventListener('touchend', function once() { goFullscreenLandscape(); w
 
   function applyOne(id) {
     const el = document.getElementById(id), L = layout[id]; if (!el) return;
-    if (L && L.left != null) { el.style.left = L.left + 'px'; el.style.top = L.top + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = `scale(${L.scale || 1})`; el.style.transformOrigin = 'center'; }
+    if (L && L.left != null) { el.style.position = 'fixed'; el.style.left = L.left + 'px'; el.style.top = L.top + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.margin = '0'; el.style.transform = `scale(${L.scale || 1})`; el.style.transformOrigin = 'center'; }
     el.style.opacity = (L && L.opacity != null) ? L.opacity : '';
   }
   function applyAll() { ids.forEach(applyOne); }
@@ -646,7 +648,7 @@ window.addEventListener('touchend', function once() { goFullscreenLandscape(); w
   // drag to move
   ids.forEach((id) => {
     const el = document.getElementById(id); let dragging = false, sx, sy, ox, oy;
-    const down = (x, y) => { if (!editing) return; selectEl(id); const r = el.getBoundingClientRect(); ox = r.left; oy = r.top; sx = x; sy = y; dragging = true; el.style.right = 'auto'; el.style.bottom = 'auto'; };
+    const down = (x, y) => { if (!editing) return; selectEl(id); const r = el.getBoundingClientRect(); ox = r.left; oy = r.top; sx = x; sy = y; dragging = true; el.style.position = 'fixed'; el.style.margin = '0'; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; };
     const moveTo = (x, y) => { if (!dragging) return; const nx = ox + (x - sx), ny = oy + (y - sy); el.style.left = nx + 'px'; el.style.top = ny + 'px'; (layout[id] = layout[id] || {}).left = nx; layout[id].top = ny; if (layout[id].scale == null) layout[id].scale = 1; };
     const up = () => { if (dragging) { dragging = false; save(); } };
     el.addEventListener('touchstart', (e) => { if (!editing) return; e.preventDefault(); e.stopPropagation(); const t = e.touches[0]; down(t.clientX, t.clientY); }, { capture: true });
@@ -660,8 +662,9 @@ window.addEventListener('touchend', function once() { goFullscreenLandscape(); w
   function setEditing(on) { editing = on; document.body.classList.toggle('hud-editing', on); panel.classList.toggle('hidden', !on); ids.forEach((i) => document.getElementById(i).classList.toggle('he-editable', on)); }
   btn.addEventListener('click', () => setEditing(true));
   document.getElementById('he-done').addEventListener('click', () => { setEditing(false); selected = null; ids.forEach((i) => document.getElementById(i).classList.remove('he-selected')); });
-  document.getElementById('he-reset').addEventListener('click', () => { layout = {}; save(); ids.forEach((id) => { const el = document.getElementById(id); el.style.left = el.style.top = el.style.right = el.style.bottom = el.style.transform = el.style.opacity = ''; }); selEl.textContent = 'Reset to default'; sizeEl.value = 100; opEl.value = 100; });
+  document.getElementById('he-reset').addEventListener('click', () => { layout = {}; save(); ids.forEach((id) => { const el = document.getElementById(id); el.style.position = el.style.margin = el.style.left = el.style.top = el.style.right = el.style.bottom = el.style.transform = el.style.opacity = ''; }); selEl.textContent = 'Reset to default'; sizeEl.value = 100; opEl.value = 100; });
 })();
 
+player.rotation.y = Math.atan2(-Math.sin(cam.yaw), -Math.cos(cam.yaw));   // face forward (back to camera) at start
 spawnHeld('katana'); updateLoadoutUI(); updateGlooUI(); updateHealthUI(); updateBackMounts();
 requestAnimationFrame(() => { document.getElementById('loader').classList.add('hidden'); document.body.classList.add('playing'); animate(); });
