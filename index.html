@@ -32,6 +32,9 @@
 
   <canvas id="game"></canvas>
 
+  <!-- Low-health red vignette -->
+  <div id="lowhp"></div>
+
   <!-- Aiming crosshair -->
   <div id="crosshair">
     <span class="ch-dot"></span>
@@ -39,6 +42,18 @@
     <span class="ch-line bottom"></span>
     <span class="ch-line left"></span>
     <span class="ch-line right"></span>
+  </div>
+
+  <!-- Health UI -->
+  <div id="health">
+    <div class="hp-row">
+      <span class="hp-heart">❤</span>
+      <div class="hp-track">
+        <div class="hp-fill" id="hp-fill"></div>
+        <div class="hp-fill-ghost" id="hp-ghost"></div>
+      </div>
+      <span class="hp-val" id="hp-val">100</span>
+    </div>
   </div>
 
   <!-- Top HUD -->
@@ -79,10 +94,13 @@
     <span class="pk-text">Pick up <b id="pk-name">AK47</b></span>
   </button>
 
-  <!-- Gloo Wall ability -->
+  <!-- Gloo Wall ability (3 charges) -->
   <button class="ability-btn" id="btn-shield">
     <span class="ab-name">GLOO</span>
-    <span class="ab-sub">WALL</span>
+    <span class="ab-charges" id="gloo-charges">
+      <i class="charge"></i><i class="charge"></i><i class="charge"></i>
+    </span>
+    <span class="ab-recharge" id="gloo-recharge"></span>
   </button>
 
   <!-- Action buttons (right) -->
