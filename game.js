@@ -182,11 +182,11 @@ function poseAvatar(a, state, dt, armsFree = true) {
     P.legL.rotation.x = s; P.legR.rotation.x = -s; kL.rotation.x = Math.max(0, -s) * 0.95; kR.rotation.x = Math.max(0, s) * 0.95;
     if (armsFree) { setArm(P.armL, -s * 0.9, 0, 0.4, dt, 9); setArm(P.armR, s * 0.9, 0, 0.4, dt, 9); }
     bodyX = state === 'sprint' ? -0.22 : -0.06;
-  } else if (state === 'jump') { setLeg(P.legL, 0.5, -1.0, dt, 12); setLeg(P.legR, 0.32, -0.8, dt, 12); if (armsFree) { setArm(P.armL, -0.5, 0, 0.5, dt, 12); setArm(P.armR, -0.4, 0, 0.5, dt, 12); } }
-  else if (state === 'land') { setLeg(P.legL, 0.95, -1.8, dt, 16); setLeg(P.legR, 0.95, -1.8, dt, 16); bodyY = -0.24; if (armsFree) setArm(P.armL, -0.3, 0, 0.6, dt, 12); }
-  else if (state === 'crouch') { setLeg(P.legL, 0.9, -1.65, dt, 12); setLeg(P.legR, 0.9, -1.65, dt, 12); bodyY = -0.22; if (armsFree) { setArm(P.armL, -0.15, 0, 0.4, dt, 10); setArm(P.armR, -0.2, 0, 0.4, dt, 10); } }
-  else if (state === 'slide') { setLeg(P.legL, 0.75, -0.25, dt, 12); setLeg(P.legR, -0.05, -1.35, dt, 12); bodyY = -0.12; bodyX = 0.4; torsoX = 0.2; lerpRot(P.head, 'x', -0.25, dt, 10); if (armsFree) setArm(P.armL, -0.5, 0, 0.7, dt, 10); }
-  else if (state === 'climb') { setLeg(P.legL, 0.9, -1.3, dt, 12); setLeg(P.legR, 0.5, -1.5, dt, 12); if (armsFree) { setArm(P.armL, -2.5, 0, 0.5, dt, 12); setArm(P.armR, -2.3, 0, 0.5, dt, 12); } bodyX = -0.2; }
+  } else if (state === 'jump') { setLeg(P.legL, -0.7, 1.0, dt, 12); setLeg(P.legR, -0.5, 0.8, dt, 12); if (armsFree) { setArm(P.armL, -0.5, 0, 0.5, dt, 12); setArm(P.armR, -0.4, 0, 0.5, dt, 12); } }
+  else if (state === 'land') { setLeg(P.legL, -0.95, 1.6, dt, 16); setLeg(P.legR, -0.95, 1.6, dt, 16); bodyY = -0.26; if (armsFree) setArm(P.armL, -0.3, 0, 0.6, dt, 12); }
+  else if (state === 'crouch') { setLeg(P.legL, -0.95, 1.55, dt, 12); setLeg(P.legR, -0.95, 1.55, dt, 12); bodyY = -0.24; if (armsFree) { setArm(P.armL, -0.15, 0, 0.4, dt, 10); setArm(P.armR, -0.2, 0, 0.4, dt, 10); } }
+  else if (state === 'slide') { setLeg(P.legL, -1.0, 0.25, dt, 12); setLeg(P.legR, -0.4, 1.5, dt, 12); bodyY = -0.2; bodyX = -0.5; torsoX = -0.1; lerpRot(P.head, 'x', 0.2, dt, 10); if (armsFree) setArm(P.armL, -0.5, 0, 0.7, dt, 10); }
+  else if (state === 'climb') { setLeg(P.legL, -0.6, 1.2, dt, 12); setLeg(P.legR, -0.4, 1.3, dt, 12); if (armsFree) { setArm(P.armL, -2.5, 0, 0.5, dt, 12); setArm(P.armR, -2.3, 0, 0.5, dt, 12); } bodyX = 0.3; }
   else { a.phase += dt * 2; setLeg(P.legL, 0, 0, dt, 8); setLeg(P.legR, 0, 0, dt, 8); if (armsFree) { setArm(P.armL, 0, 0, 0.35, dt, 8); setArm(P.armR, 0, 0, 0.35, dt, 8); } bodyX = Math.sin(a.phase) * 0.02; }
   P.body.position.y = lerpN(P.body.position.y, bodyY, dt, 12); P.body.rotation.x = lerpN(P.body.rotation.x, bodyX, dt, 10); P.torso.rotation.x = lerpN(P.torso.rotation.x, torsoX, dt, 8);
   if (state !== 'slide') lerpRot(P.head, 'x', 0, dt, 8);
@@ -550,13 +550,10 @@ function update(dt) {
     climbing = false;
     for (const L of ladders) if (Math.hypot(player.position.x - L.x, player.position.z - L.z) < 1.0 && player.position.y < L.top - 0.05) { if (moveStick.mag > 0.25 || verticalVel > 0) { climbing = true; player.position.x = lerpN(player.position.x, L.x, dt, 8); player.position.z = lerpN(player.position.z, L.z, dt, 8); player.position.y += 3.4 * dt; verticalVel = 0; if (player.position.y >= L.top) { player.position.y = L.top; player.position.x -= L.nx * 0.6; player.position.z -= L.nz * 0.6; } } break; }
 
-    // face the way you look/aim (back to camera) — consistent for idle, fire, jump & gloo
+    // ALWAYS face where the camera looks (back to camera): swiping rotates the player,
+    // the gun/face always point at the crosshair, and firing never flips the body.
     const aimRot = Math.atan2(-Math.sin(cam.yaw), -Math.cos(cam.yaw));
-    let faceTarget = null;
-    if (WEAPONS[heldKey].type === 'gun') faceTarget = aimRot;       // guns always face the crosshair
-    else if (firing) faceTarget = aimRot;                          // katana slash faces forward
-    else if (inDir) faceTarget = Math.atan2(inDir.x, inDir.z);     // melee/idle face movement
-    if (faceTarget != null) { let diff = faceTarget - player.rotation.y; while (diff > Math.PI) diff -= 6.283; while (diff < -Math.PI) diff += 6.283; player.rotation.y += diff * Math.min(1, dt * 14); }
+    { let diff = aimRot - player.rotation.y; while (diff > Math.PI) diff -= 6.283; while (diff < -Math.PI) diff += 6.283; player.rotation.y += diff * Math.min(1, dt * 16); }
 
     if (!climbing) { const wasAir = !onGround; verticalVel -= 20 * dt; player.position.y += verticalVel * dt; const floor = groundHeightAt(player.position.x, player.position.z); if (player.position.y <= floor) { if (wasAir && verticalVel < -6) landTimer = 0.22; player.position.y = floor; verticalVel = 0; onGround = true; } else onGround = false; }
     resolveCollisions(player.position); player.position.x = Math.max(-29, Math.min(29, player.position.x)); player.position.z = Math.max(-29, Math.min(29, player.position.z));
