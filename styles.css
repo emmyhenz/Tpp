@@ -159,6 +159,40 @@ html, body {
 .ab-charges .charge.empty { background: rgba(255,255,255,.2); box-shadow: none; }
 .ab-recharge { font-size: 8px; opacity: .7; height: 9px; line-height: 9px; }
 
+/* ---------- HUD editor ---------- */
+#hud-edit-btn {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); right: 50%;
+  transform: translateX(50%); margin-right: -90px;
+  z-index: 30; width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(0,0,0,.45); border: 1.5px solid rgba(255,255,255,.3);
+  color: #fff; font-size: 17px;
+}
+#hud-editor {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 41; width: 280px; max-width: 88vw;
+  background: rgba(12,16,24,.94); border: 1.5px solid rgba(120,180,255,.5);
+  border-radius: 14px; padding: 16px; color: #fff;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6);
+}
+#hud-editor.hidden { display: none; }
+.he-title { font-weight: 800; letter-spacing: 2px; font-size: 14px; margin-bottom: 6px; color: #7fd0ff; }
+.he-hint { font-size: 11px; opacity: .75; line-height: 1.4; margin-bottom: 10px; }
+.he-sel { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #ffd23a; }
+.he-slider { display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin: 8px 0; gap: 10px; }
+.he-slider input { flex: 1; }
+.he-btns { display: flex; gap: 10px; margin-top: 12px; }
+.he-btns button {
+  flex: 1; padding: 9px; border-radius: 8px; font-weight: 700; font-size: 12px; color: #fff;
+  border: 1.5px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08);
+}
+#he-done { border-color: #36d66f; background: rgba(54,214,111,.2); }
+/* element being edited */
+body.hud-editing .he-editable { outline: 2px dashed rgba(120,200,255,.85); outline-offset: 2px; border-radius: 10px; }
+body.hud-editing .he-editable.he-selected { outline-color: #ffd23a; }
+/* dim the editor panel itself out of the way while dragging on the field */
+body.hud-editing #hud-editor { opacity: .25; }
+body.hud-editing #hud-editor:hover, body.hud-editing #hud-editor.pin { opacity: 1; }
+
 /* ---------- Top HUD ---------- */
 #hud-top {
   position: fixed;

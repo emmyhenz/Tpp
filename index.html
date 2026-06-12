@@ -116,6 +116,17 @@
     </div>
   </div>
 
+  <!-- HUD editor toggle + panel -->
+  <button id="hud-edit-btn" title="Edit HUD">⚙</button>
+  <div id="hud-editor" class="hidden">
+    <div class="he-title">HUD EDITOR</div>
+    <div class="he-hint">Drag any control to move it. Tap one to select, then tune size &amp; opacity.</div>
+    <div class="he-sel" id="he-sel">No control selected</div>
+    <label class="he-slider">Size <input type="range" id="he-size" min="60" max="170" value="100" disabled></label>
+    <label class="he-slider">Opacity <input type="range" id="he-opacity" min="25" max="100" value="100" disabled></label>
+    <div class="he-btns"><button id="he-reset">Reset all</button><button id="he-done">Done</button></div>
+  </div>
+
   <script type="module" src="game.js"></script>
 </body>
 </html>
