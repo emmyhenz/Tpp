@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#000000" />
+  <title>TPP — Container Warfare</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Loading map…</p>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <!-- Top HUD -->
+  <div id="hud-top">
+    <div class="team-bar">
+      <span class="score blue">1</span>
+      <span class="timer" id="timer">00:11</span>
+      <span class="score orange">1</span>
+    </div>
+    <div class="objective">Objective: 5</div>
+  </div>
+
+  <!-- Movement joystick (left) -->
+  <div id="move-zone" class="joystick-zone">
+    <div class="joystick-base" id="move-base">
+      <div class="joystick-knob" id="move-knob"></div>
+    </div>
+    <div class="joystick-label">MOVE</div>
+  </div>
+
+  <!-- Look / camera joystick (right) -->
+  <div id="look-zone" class="joystick-zone">
+    <div class="joystick-base" id="look-base">
+      <div class="joystick-knob" id="look-knob"></div>
+    </div>
+    <div class="joystick-label">LOOK</div>
+  </div>
+
+  <!-- Action buttons -->
+  <div id="actions">
+    <button class="action-btn jump" id="btn-jump">JUMP</button>
+    <button class="action-btn sprint" id="btn-sprint">SPRINT</button>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
