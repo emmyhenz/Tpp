@@ -23,7 +23,46 @@
     <p>Loading map…</p>
   </div>
 
+  <!-- Shown in portrait: ask the player to rotate to landscape -->
+  <div id="rotate-overlay">
+    <div class="rotate-icon">⟳📱</div>
+    <p>Rotate your device to landscape</p>
+    <button id="fs-btn">Tap to play fullscreen</button>
+  </div>
+
   <canvas id="game"></canvas>
+
+  <!-- Low-health red vignette -->
+  <div id="lowhp"></div>
+
+  <!-- Aiming crosshair -->
+  <div id="crosshair">
+    <span class="ch-dot"></span>
+    <span class="ch-line top"></span>
+    <span class="ch-line bottom"></span>
+    <span class="ch-line left"></span>
+    <span class="ch-line right"></span>
+  </div>
+
+  <!-- Health UI -->
+  <div id="health">
+    <div class="hp-row">
+      <span class="hp-heart">❤</span>
+      <div class="hp-track">
+        <div class="hp-fill-ghost" id="hp-ghost"></div>
+        <div class="hp-fill" id="hp-fill"></div>
+      </div>
+      <span class="hp-val" id="hp-val">100</span>
+    </div>
+    <div class="hp-row">
+      <span class="hp-heart armor-ico">🛡</span>
+      <div class="hp-track armor"><div class="ar-fill" id="ar-fill"></div></div>
+      <span class="plates" id="plates">▮▮▮</span>
+    </div>
+  </div>
+
+  <!-- Ammo -->
+  <div id="ammo"><b id="ammo-cur">30</b><span>/</span><span id="ammo-max">30</span><span id="ammo-reloading">RELOADING…</span></div>
 
   <!-- Top HUD -->
   <div id="hud-top">
@@ -42,19 +81,62 @@
     </div>
     <div class="joystick-label">MOVE</div>
   </div>
+  <div class="look-hint">drag screen to look</div>
 
-  <!-- Look / camera joystick (right) -->
-  <div id="look-zone" class="joystick-zone">
-    <div class="joystick-base" id="look-base">
-      <div class="joystick-knob" id="look-knob"></div>
-    </div>
-    <div class="joystick-label">LOOK</div>
+  <!-- Weapon slots (top-right) -->
+  <div id="weapon-slots">
+    <button class="wslot" id="slot-0" data-slot="0">
+      <span class="wname">— empty —</span>
+      <span class="wkey">1</span>
+    </button>
+    <button class="wslot" id="slot-1" data-slot="1">
+      <span class="wname">— empty —</span>
+      <span class="wkey">2</span>
+    </button>
+    <div class="melee-indicator" id="melee-ind">🗡 Katana</div>
   </div>
 
-  <!-- Action buttons -->
+  <!-- Pickup prompt -->
+  <button id="pickup-prompt" class="hidden">
+    <span class="pk-icon">🔫</span>
+    <span class="pk-text">Pick up <b id="pk-name">AK47</b></span>
+  </button>
+
+  <!-- Gloo Wall ability (3 charges) -->
+  <button class="ability-btn" id="btn-shield">
+    <span class="ab-name">GLOO</span>
+    <span class="ab-charges" id="gloo-charges">
+      <i class="charge"></i><i class="charge"></i><i class="charge"></i>
+    </span>
+    <span class="ab-recharge" id="gloo-recharge"></span>
+  </button>
+
+  <!-- Action buttons (right) -->
   <div id="actions">
     <button class="action-btn jump" id="btn-jump">JUMP</button>
-    <button class="action-btn sprint" id="btn-sprint">SPRINT</button>
+    <button class="action-btn slide" id="btn-slide">SLIDE</button>
+  </div>
+
+  <!-- Reload + Heal -->
+  <button class="mini-btn" id="btn-reload">⟳ RELOAD</button>
+  <button class="mini-btn heal" id="btn-heal">✚ HEAL</button>
+
+  <!-- Fire / aim joystick (drag to aim, hold to fire) -->
+  <div id="fire-zone" class="fire-joystick">
+    <div class="fire-base" id="fire-base">
+      <div class="fire-knob" id="fire-knob">FIRE</div>
+    </div>
+  </div>
+
+  <!-- HUD editor toggle + panel -->
+  <button id="hud-edit-btn" title="Edit HUD">⚙</button>
+  <div id="hud-editor" class="hidden">
+    <div class="he-title">HUD EDITOR</div>
+    <div class="he-hint">Drag any control to move it. Tap one to select, then tune size &amp; opacity.</div>
+    <div class="he-sel" id="he-sel">No control selected</div>
+    <label class="he-slider">Size <input type="range" id="he-size" min="60" max="170" value="100" disabled></label>
+    <label class="he-slider">Opacity <input type="range" id="he-opacity" min="25" max="100" value="100" disabled></label>
+    <div class="he-btns"><button id="he-reset">Reset all</button><button id="he-done">Done</button></div>
   </div>
 
   <script type="module" src="game.js"></script>
