@@ -149,6 +149,32 @@ html, body {
   color: #fff; font-weight: 800; font-size: 13px; min-width: 30px;
   text-shadow: 0 1px 2px rgba(0,0,0,.7);
 }
+.armor-ico { color: #7fb6ff; font-size: 14px; }
+.hp-track.armor { height: 10px; }
+.ar-fill { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg,#5b9bff,#9cc4ff); transition: width .18s ease; }
+.plates { color: #9cc4ff; font-size: 13px; letter-spacing: 1px; min-width: 30px; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+
+/* Ammo */
+#ammo {
+  position: fixed; right: 130px; bottom: calc(env(safe-area-inset-bottom, 0px) + 150px);
+  z-index: 12; color: #fff; font-weight: 800; font-size: 20px; text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+#ammo b { font-size: 26px; }
+#ammo span { opacity: .7; font-size: 15px; }
+#ammo #ammo-reloading { display: none; color: #ffd23a; font-size: 12px; margin-left: 6px; }
+#ammo.reloading #ammo-reloading { display: inline; }
+
+/* Reload + Heal mini buttons */
+.mini-btn {
+  position: fixed; z-index: 20; border-radius: 22px; padding: 8px 14px;
+  font-weight: 800; font-size: 12px; letter-spacing: 1px; color: #fff;
+  border: 2px solid rgba(255,255,255,.3); background: rgba(0,0,0,.4);
+}
+#btn-reload { right: 120px; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+#btn-reload:active { background: rgba(255,210,58,.5); }
+#btn-heal { left: 22px; bottom: calc(env(safe-area-inset-bottom, 0px) + 270px); border-color: #36d66f; }
+#btn-heal:active { background: rgba(54,214,111,.5); }
+#btn-heal.busy { opacity: .5; }
 
 /* ---------- Gloo charges ---------- */
 .ab-charges { display: flex; gap: 3px; margin-top: 2px; }

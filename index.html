@@ -49,12 +49,20 @@
     <div class="hp-row">
       <span class="hp-heart">❤</span>
       <div class="hp-track">
-        <div class="hp-fill" id="hp-fill"></div>
         <div class="hp-fill-ghost" id="hp-ghost"></div>
+        <div class="hp-fill" id="hp-fill"></div>
       </div>
       <span class="hp-val" id="hp-val">100</span>
     </div>
+    <div class="hp-row">
+      <span class="hp-heart armor-ico">🛡</span>
+      <div class="hp-track armor"><div class="ar-fill" id="ar-fill"></div></div>
+      <span class="plates" id="plates">▮▮▮</span>
+    </div>
   </div>
+
+  <!-- Ammo -->
+  <div id="ammo"><b id="ammo-cur">30</b><span>/</span><span id="ammo-max">30</span><span id="ammo-reloading">RELOADING…</span></div>
 
   <!-- Top HUD -->
   <div id="hud-top">
@@ -108,6 +116,10 @@
     <button class="action-btn jump" id="btn-jump">JUMP</button>
     <button class="action-btn slide" id="btn-slide">SLIDE</button>
   </div>
+
+  <!-- Reload + Heal -->
+  <button class="mini-btn" id="btn-reload">⟳ RELOAD</button>
+  <button class="mini-btn heal" id="btn-heal">✚ HEAL</button>
 
   <!-- Fire / aim joystick (drag to aim, hold to fire) -->
   <div id="fire-zone" class="fire-joystick">
